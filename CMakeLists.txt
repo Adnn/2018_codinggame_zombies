@@ -78,6 +78,27 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY    ${CMAKE_BINARY_DIR}/${RUNTIME_OUTPUT_DIREC
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ## #################################################################
+## Setup the build tools
+## #################################################################
+
+# TODO : Uncomment following block to force a decent support of C++11 in VS
+## In case we are building with VisualStudio
+#if(MSVC OR MSVC_IDE) 
+#  if( MSVC_VERSION LESS 1800 )       # before Visual Studio 2013
+#    message(FATAL_ERROR "The project requires C++11 features. " 
+#      "You need at least Visual Studio 12 (Microsoft Visual Studio 2013), " 
+#      "with Microsoft Visual C++ Compiler Nov 2013 CTP (CTP_Nov2013).") 
+#  elseif( MSVC_VERSION EQUAL 1800 )  # VS 2013 (VC12)
+#    message( "VC12: use Microsoft Visual Studio 2013 " 
+#      "with Microsoft Visual C++ Compiler Nov 2013 CTP (CTP_Nov2013)." ) 
+#    set(CMAKE_GENERATOR_TOOLSET "CTP_Nov2013" CACHE STRING "Platform Toolset" FORCE) 
+#  else() # VC12+, assuming C++11 supported. 
+#    #nothing to do hopefully
+#  endif() 
+#endif()
+
+
+## #################################################################
 ## Setup installation settings
 ## #################################################################
 #set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
