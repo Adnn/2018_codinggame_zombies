@@ -77,6 +77,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY    ${CMAKE_BINARY_DIR}/${RUNTIME_OUTPUT_DIREC
 # Where to look for custom FindXXX.cmake files
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+# Definitions of custom macros
+include (cmc-macros)
+
 ## #################################################################
 ## Setup the build tools
 ## #################################################################
@@ -132,10 +135,9 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 ## Build options
 ## #################################################################
 
-#option(BUILD_DOCUMENTATION "Build doxygen's documentation" true)
-#if (BUILD_DOCUMENTATION)
-#    add_subdirectory(docs)
-#endif (BUILD_DOCUMENTATION)
+# Doxygen documentation generation
+option(BUILD_DOCUMENTATION "Build doxygen's documentation" false)
+conditional_add_subdirectory(docs OPTIONS BUILD_DOCUMENTATION)
 
 # CMake automatically checks this variable value when calling add_library command.
 option(BUILD_SHARED_LIBS "Build shared libraries" True)
