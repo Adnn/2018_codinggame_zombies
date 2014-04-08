@@ -24,6 +24,7 @@ if (install_override)
   endif (DEFINED ENV{CM_INSTALL_DIR})
 endif (install_override)
 
+
 ## #################################################################
 ## Setup version numbering
 ## #################################################################
@@ -35,6 +36,7 @@ set(SOVERSION "${VERSION_BUILD}")
 
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
+
 
 ## #################################################################
 ## Setup output paths
@@ -68,6 +70,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY    ${CMAKE_BINARY_DIR}/${LIBRARY_OUTPUT_DIREC
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY    ${CMAKE_BINARY_DIR}/${ARCHIVE_OUTPUT_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY    ${CMAKE_BINARY_DIR}/${RUNTIME_OUTPUT_DIRECTORY})
 
+
 ## #################################################################
 ## Setup CMake Modules
 ## #################################################################
@@ -80,11 +83,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 #set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIBRARY_OUTPUT_DIRECTORY}" )
 
+
 ## #################################################################
 ## Resolve dependencies
 ## #################################################################
 #if(APPLE)
 #  mark_as_advanced(CMAKE_OSX_ARCHITECTURES)
+#  #SYSROOT variable allows to select OS X SDK.
+#  # see: http://stackoverflow.com/q/10165335/1027706
 #  mark_as_advanced(CMAKE_OSX_SYSROOT)
 #endif(APPLE)
 
@@ -99,6 +105,8 @@ include_directories(src/libs)
 # It is notably where ${libname}_Export.h files will be exported for DLL libraries,
 #   and those file must be seen for libraries and clients compilations.
 include_directories(${CMAKE_BINARY_DIR}/include)
+
+
 ## #################################################################
 ## Build options
 ## #################################################################
@@ -116,10 +124,17 @@ option(BUILD_SHARED_LIBS "Build shared libraries" True)
 # 
 option(BUILD_WITH_C++11_SUPPORT "Set the compiler flags/options required to compile with C++11 support" true)
 if(BUILD_WITH_C++11_SUPPORT)
-	IF(UNIX)
-		LIST(APPEND CMAKE_CXX_FLAGS "-std=c++0x")
-	ENDIF(UNIX)
+	if(UNIX)
+		list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+	endif(UNIX)
+
+    #With C++11 support, Xcode should use libc++ (by Clang) instead of default GNU stdlibc++
+    if (CMAKE_GENERATOR STREQUAL "Xcode")
+        SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+    endif ()
 endif(BUILD_WITH_C++11_SUPPORT)
+
+
 
 # Start recursive crawling of the sources
 add_subdirectory(src)
