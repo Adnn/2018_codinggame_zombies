@@ -1,18 +1,21 @@
+## #################################################################
+## CMakeLists.txt
+## #################################################################
+
 # TODO : library name goes here
 project(__)
 
 # Configure (and thus copy) the template export file to the build dir
 # The export file will be added to the project headers list (and installed with them)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/Export.h.in
-        ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}_Export.h
-        @ONLY
+    ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}_Export.h
+    @ONLY
 )
 
 # TODO : list .h files here. 
 # Helpful windows command : dir /b /oen
 set(${PROJECT_NAME}_HEADERS
-	${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}_Export.h
-	
+    ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}_Export.h
 )
 
 # TODO : list .cpp files here
@@ -37,13 +40,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 )
 
+
 ######################################################################
 ## Installation stuff - common to all projects
 ######################################################################
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
-        VERSION "${VERSION}"
-        SOVERSION "${SOVERSION}"
-        PUBLIC_HEADER "${${PROJECT_NAME}_HEADERS}" )
+                      VERSION "${VERSION}"
+                      SOVERSION "${SOVERSION}"
+                      PUBLIC_HEADER "${${PROJECT_NAME}_HEADERS}" )
 
 # Generate the export set for the target
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
@@ -71,6 +76,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
 
 # Exports
 # TODO : change namespace
-install(EXPORT ${PROJECT_NAME}Targets NAMESPACE AD::
+set (NAMESPACE "AD")
+install(EXPORT ${PROJECT_NAME}Targets NAMESPACE ${NAMESPACE}::
         DESTINATION ${ConfigPackageLocation}) #install tree
-export(EXPORT ${PROJECT_NAME}Targets NAMESPACE AD::) #build tree
+export(EXPORT ${PROJECT_NAME}Targets NAMESPACE ${NAMESPACE}::) #build tree
