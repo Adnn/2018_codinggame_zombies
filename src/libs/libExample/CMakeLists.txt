@@ -5,22 +5,13 @@
 # TODO : library name goes here
 project(__)
 
-# Configure (and thus copy) the template export file to the build dir
-# The export file will be added to the project headers list (and installed with them)
-configure_file(${CMAKE_SOURCE_DIR}/cmake/Export.h.in
-    ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}_Export.h
-    @ONLY
-)
-
 # TODO : list .h files here. 
 # Helpful windows command : dir /b /oen
 set(${PROJECT_NAME}_HEADERS
-    ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}_Export.h
 )
 
 # TODO : list .cpp files here
 set(${PROJECT_NAME}_SOURCES
-
 )
 
 add_library(${PROJECT_NAME}
@@ -48,14 +39,13 @@ target_link_libraries(${PROJECT_NAME}
 set_target_properties(${PROJECT_NAME} PROPERTIES
                       VERSION "${VERSION}"
                       SOVERSION "${SOVERSION}"
-                      PUBLIC_HEADER "${${PROJECT_NAME}_HEADERS}" )
+)
 
 # Generate the export set for the target
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
         RUNTIME DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}
         LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY}
         ARCHIVE DESTINATION ${ARCHIVE_OUTPUT_DIRECTORY}
-        PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
 )
 
 # Install the headers
