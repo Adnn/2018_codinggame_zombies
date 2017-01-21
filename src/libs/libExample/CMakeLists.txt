@@ -5,6 +5,11 @@
 # TODO : library name goes here
 project(__)
 
+# TODO : list .dox standalone doxygen pages here
+set(${PROJECT_NAME}_DOXYGEN
+    #mainpage.dox
+)
+
 # TODO : list .h files here. 
 # Helpful windows command : dir /b /oen
 set(${PROJECT_NAME}_HEADERS
@@ -14,10 +19,14 @@ set(${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
 )
 
+cmc_source_group() ## For IDE generators, groups files based on the subfolder organisation
+
 add_library(${PROJECT_NAME}
     ${${PROJECT_NAME}_SOURCES}
     ${${PROJECT_NAME}_HEADERS}
+    ${${PROJECT_NAME}_DOXYGEN}
 )
+
 
 ## Adds the library headers themselves to the interface include directory
 target_include_directories(${PROJECT_NAME} INTERFACE 
@@ -25,7 +34,18 @@ target_include_directories(${PROJECT_NAME} INTERFACE
                            $<INSTALL_INTERFACE:include>
 )
 
+## Adds the parent folder to the header search path used when building *this* library.
+## It allows this library's code to include other headers from this library using <${PROJECT_NAME}/file.h>
+## (instead of relying on potentially backtracing relative paths)
+## Drawback: this is making the other libraries in the lib/ folder visible for inclusion.
+target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>)
+
+# Public includes
 target_include_directories(${PROJECT_NAME} PUBLIC
+)
+
+# Public includes treated as system (i.e., not generating warnings)
+cmc_target_include_system_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -49,24 +69,20 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
 )
 
 # Install the headers
+    ## Note: Does install all files, but does *not* recreate the folder structure
 install(FILES ${${PROJECT_NAME}_HEADERS}
         DESTINATION include/${PROJECT_NAME})
     
-# Generate config files in the build tree.
-configure_file(${CMAKE_SOURCE_DIR}/cmake/Config.cmake.in
-               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-               @ONLY)
+    ## Alternatively: Install a subdir content
+#install(DIRECTORY ${_subdir}/ DESTINATION include/${PROJECT_NAME}/${_subdir}
+#        FILES_MATCHING PATTERN "*.h")
 
-# Custom variable holding the destination folder for package configuration files
-set (ConfigPackageLocation cmake/)
 
-# Install the config file
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-        DESTINATION ${ConfigPackageLocation})
+# TODO: When including internal dependencies using 'cmc_find_internal_package()', those internal dependencies
+# linked against by this target should be listed in 'cmc_config_dependency_code()'.
+# List dependencies to be found by the config file, and export the target.
+#cmc_config_dependency_code(TARGET_DEPENDENCIES DEPENDS __ __)
 
-# Exports
-# TODO : change namespace
-set (NAMESPACE "AD")
-install(EXPORT ${PROJECT_NAME}Targets NAMESPACE ${NAMESPACE}::
-        DESTINATION ${ConfigPackageLocation}) #install tree
-export(EXPORT ${PROJECT_NAME}Targets NAMESPACE ${NAMESPACE}::) #build tree
+include(cmc-export)
+# TODO: set namespace
+cmc_export(${PROJECT_NAME} NAMESPACE __::)

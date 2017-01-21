@@ -10,33 +10,6 @@ project(__)
 
 
 ## #################################################################
-## Setup output paths
-## #################################################################
-
-# Used to initialize DEBUG_POSTFIX property of further created targets.
-set(CMAKE_DEBUG_POSTFIX "d")
-
-# Potentially adds a suffix to the library installation directory, by detecting the compiler size for void*
-# Nota: copied from osg's root CMakeLists.txt
-IF(UNIX AND NOT WIN32 AND NOT APPLE)
-  IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
-      SET(LIB_POSTFIX "64" CACHE STRING "suffix for 32/64 dir placement")
-      MARK_AS_ADVANCED(LIB_POSTFIX)
-  ENDIF()
-ENDIF()
-IF(NOT DEFINED LIB_POSTFIX)
-    SET(LIB_POSTFIX "")
-ENDIF()
-
-# On Windows platforms, .dll files are RUNTIME targets and the corresponding import library are ARCHIVE.
-# Static libraries are always treated as archive: its is not common to build a LIBRARY on Windows.
-# Those variables should be used by the install() command for the different targets.
-set(RUNTIME_OUTPUT_DIRECTORY bin)
-set(LIBRARY_OUTPUT_DIRECTORY lib${LIB_POSTFIX})
-set(ARCHIVE_OUTPUT_DIRECTORY lib${LIB_POSTFIX})
-
-
-## #################################################################
 ## Setup CMake Modules
 ## #################################################################
 
@@ -51,12 +24,25 @@ define_option_variables()
 
 
 ## #################################################################
+## Setup output paths
+## #################################################################
+
+# Setups the debug postfix, and populates *_OUTPUT_DIRECTORY variables.
+cmc_setup_output()
+
+if(CMAKE_GENERATOR STREQUAL Xcode)
+    # Allows to execute the Product -> Archive action in Xcode.
+    cmc_xcode_product_archive_fix()
+endif()
+
+
+## #################################################################
 ## Build options
 ## #################################################################
 
 # Doxygen documentation generation
 option(BUILD_DOCUMENTATION "Build doxygen's documentation" false)
-conditional_add_subdirectory(docs OPTIONS BUILD_DOCUMENTATION)
+conditional_add_subdirectory(cmake/doc OPTIONS BUILD_DOCUMENTATION)
 
 # CMake automatically checks this variable value when calling add_library command.
 option(BUILD_SHARED_LIBS "Build shared libraries" false)
@@ -84,6 +70,18 @@ endif()
 ## #################################################################
 
 # TODO : find all your dependencies packages
+
+#
+# Internal dependencies
+#
+include(cmc-import)                    
+#cmc_find_internal_package(__   NAMESPACE __::)
+
+
+#
+# 3rd party dependencies
+#
+
 #find_package(__)
 
 

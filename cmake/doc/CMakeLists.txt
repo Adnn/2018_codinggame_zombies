@@ -4,12 +4,12 @@ if (NOT DOXYGEN_FOUND)
     message(SEND_ERROR "Doxygen not found, unable to generate documentation")
 endif (NOT DOXYGEN_FOUND) 
 
-set (DOXYCONF_INPUT "${CMAKE_SOURCE_DIR}/src/libs" CACHE STRING "Folders to generate documentation for, recursively searched.")
+set (DOXYCONF_INPUT "${CMAKE_SOURCE_DIR}/src" CACHE STRING "Folders to be documented, searched recursively.")
 set (DOXYCONF_OUTPUT ${CMAKE_BINARY_DIR}/doxygen-output CACHE PATH "Directory receiving the generated documentation.")
 set (DOXYCONF_INSTALL ${PROJECT_NAME}/documentation CACHE PATH "Directory where the documentation will be installed.")
 
 configure_file(
-    ${PROJECT_SOURCE_DIR}/docs/Doxyfile.in
+    Doxyfile.in
     ${DOXYCONF_OUTPUT}/Doxyfile
     @ONLY
 )
