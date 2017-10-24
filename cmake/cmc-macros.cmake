@@ -26,7 +26,8 @@ include(${CMAKE_ROOT}/Modules/CMakeParseArguments.cmake)
 ## Initialize custom variables, grouped under 'OPTION', to control CMake run.
 ##
 ## CMAKE_DOCUMENTATION_END
-function(DEFINE_OPTION_VARIABLES)
+function(cmc_define_option_variables)
+
     set(OPTION_VERBOSE_ADD_SUBDIR CACHE BOOL
         "When enabled, invocation of conditional_add_subdirectory() will produce a diagnostic message.")
     set(OPTION_VERBOSE_HANDLE_TARGET_ORIGIN CACHE BOOL
@@ -34,7 +35,9 @@ function(DEFINE_OPTION_VARIABLES)
     set(OPTION_ADD_BUILDTREE_TARGETS_TO_PROJECT CACHE BOOL
         "When enabled, dependencies satisfied by importing a CMake target from its build tree will be added as a subproject in the generated project files. (They are otherwise automatically rebuilt by a command line step).")
     set(OPTION_SEPARATE_HEADERS_FROM_SOURCES TRUE CACHE BOOL "Grouping files in the project tree: separate headers from sources")
+
 endfunction()
+
 
 ## CMAKE_DOCUMENTATION_START cmc_source_group
 ##
@@ -75,6 +78,7 @@ macro(cmc_source_group_united)
     endif()
   endforeach()
 endmacro()
+
 
 macro(cmc_source_group)
   if(${OPTION_SEPARATE_HEADERS_FROM_SOURCES})
@@ -123,6 +127,12 @@ function(cmc_setup_output)
     set(RUNTIME_OUTPUT_DIRECTORY bin PARENT_SCOPE)
     set(LIBRARY_OUTPUT_DIRECTORY lib${LIB_POSTFIX} PARENT_SCOPE)
     set(ARCHIVE_OUTPUT_DIRECTORY lib${LIB_POSTFIX} PARENT_SCOPE)
+
+    if(CMAKE_GENERATOR STREQUAL Xcode)
+        # Allows to execute the Product -> Archive action in Xcode.
+        internal_cmc_xcode_product_archive_fix()
+    endif()
+
 endfunction()
 
 
@@ -133,7 +143,7 @@ endfunction()
 ## see: http://stackoverflow.com/q/33020245/1027706
 ##
 ## CMAKE_DOCUMENTATION_END
-macro(cmc_xcode_product_archive_fix)
+macro(internal_cmc_xcode_product_archive_fix)
     if(NOT CMAKE_GENERATOR STREQUAL Xcode)
         message(WARNING "Calling 'cmc_xcode_product_archive_fix()' while the generator is not Xcode.")
     endif()

@@ -20,7 +20,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include (cmc-macros)
 
 # Definition of custom variables
-define_option_variables()
+cmc_define_option_variables()
 
 
 ## #################################################################
@@ -29,11 +29,6 @@ define_option_variables()
 
 # Setups the debug postfix, and populates *_OUTPUT_DIRECTORY variables.
 cmc_setup_output()
-
-if(CMAKE_GENERATOR STREQUAL Xcode)
-    # Allows to execute the Product -> Archive action in Xcode.
-    cmc_xcode_product_archive_fix()
-endif()
 
 
 ## #################################################################
@@ -48,7 +43,7 @@ conditional_add_subdirectory(cmake/doc OPTIONS BUILD_DOCUMENTATION)
 option(BUILD_SHARED_LIBS "Build shared libraries" false)
 
 #
-# Select modules to build
+# Control modules to build
 #
 
 # TODO : list optional components here, assigning one variable each
@@ -56,13 +51,10 @@ option(BUILD_SHARED_LIBS "Build shared libraries" false)
 
 
 # 
-# C++14 support
+# C++ version control
 # 
-include(cmc-cpp) # for enable_cpp_version
-option(BUILD_WITH_C++14_SUPPORT "Set the compiler flags/options required to compile with C++14 support" true)
-if(BUILD_WITH_C++14_SUPPORT)
-    enable_cpp_version(C++14)
-endif()
+include(cmc-cpp) # for cmc_select_cpp_version
+cmc_select_cpp_version()
 
 
 ## #################################################################

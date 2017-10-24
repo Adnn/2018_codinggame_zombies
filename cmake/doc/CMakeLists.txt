@@ -21,8 +21,5 @@ add_custom_target(
         COMMENT "Building documentation..."
 )
 
-if(VERBOSE)
-    message(STATUS "***INFO***: You can use doc target to build documentation")
-endif()
-
 install (DIRECTORY ${DOXYCONF_OUTPUT}/html/ DESTINATION ${DOXYCONF_INSTALL})
+
