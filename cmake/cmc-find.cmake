@@ -4,89 +4,120 @@
 #
 # Provides function to help writting FindXxx modules.
 
+
 function(HELP_FIND module)
-    set(oneValueArgs "HEADER;LIBRARY")
-    #set(multiValueArgs "HEADERS;LIBRARIES")
+    set(oneValueArgs "HEADER")
+    set(multiValueArgs "LIBRARY;LIBRARY_DEBUG;LIBRARY_RELEASE")
     cmake_parse_arguments(CAS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-# The base search path
-set (_${module}_PATH)
+    if(CAS_LIBRARY AND (CAS_LIBRARY_DEBUG OR CAS_LIBRARY_RELEASE))
+        message(SEND_ERROR "HELP_FIND cannot be called with both LIBRARY and LIBRARY_<config>")
+    endif()
 
-if(${module}_ROOT_DIR)
-    set(_${module}_PATH ${${module}_ROOT_DIR})
-elseif(${module}_ROOT)
-    set(_${module}_PATH ${${module}_ROOT})
-elseif(${module}_DIR)
-    set(_${module}_PATH ${${module}_DIR})
-endif()
+    # The base search path
+    set (_${module}_PATH)
 
-##
-## Look for headers and libs
-##
-find_path(${module}_INCLUDE_DIR ${CAS_HEADER}
-          ${_${module}_PATH}/include
-          #$ENV{${module}_DIR}
-	  #NO_DEFAULT_PATH
-	  NO_SYSTEM_ENVIRONMENT_PATH
-)
+    if(${module}_ROOT_DIR)
+        set(_${module}_PATH ${${module}_ROOT_DIR})
+    elseif(${module}_ROOT)
+        set(_${module}_PATH ${${module}_ROOT})
+    elseif(${module}_DIR)
+        set(_${module}_PATH ${${module}_DIR})
+    endif()
 
-#find_path(${module}_INCLUDE_DIR ${CAS_HEADER}
-#    #$ENV{${module}_HOME}/include
-#    #$ENV{${module}_ROOT}/include
-#    /usr/local/include
-#    /usr/include
-#)
+    ##
+    ## Look for headers and libs
+    ##
+    find_path(${module}_INCLUDE_DIR ${CAS_HEADER}
+        PATHS
+            ${_${module}_PATH}/include
+        NO_DEFAULT_PATH
+    )
 
-find_library(${module}_LIBRARY NAMES "${CAS_LIBRARY}"
-    PATHS
-        ${_${module}_PATH}
-        ${_${module}_PATH}/lib
-        #${_${module}_PATH}/lib/release
-        ${_${module}_PATH}/bin
-        #PATH_SUFFIXES
-        #PATHbin.osx
-    #NO_DEFAULT_PATH
-    NO_SYSTEM_ENVIRONMENT_PATH
-)
+    find_path(${module}_INCLUDE_DIR ${CAS_HEADER})
 
-#find_library(${module}_LIBRARY NAMES ${CAS_LIBRARY}
-#    PATHS
-#        /usr/lib64
-#        /usr/lib
-#)
 
-##	
-## handle the QUIETLY and REQUIRED arguments and set ${module}_FOUND to TRUE if 
-## all listed variables are TRUE
-##
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(${module} 
-    FOUND_VAR ${module}_FOUND
-    REQUIRED_VARS ${module}_INCLUDE_DIR ${module}_LIBRARY
-)
+    ## 
+    ## Look for the library binaries
+    ##
+    if(NOT CAS_LIBRARY)
+        _cmc_find_library(${module}_LIBRARY_RELEASE CAS_LIBRARY_RELEASE)
+        _cmc_find_library(${module}_LIBRARY_DEBUG CAS_LIBRARY_DEBUG)
+        set(${module}_link_line "optimized ${${module}_LIBRARY_RELEASE} debug ${${module}_LIBRARY_DEBUG}")
+        set(${module}_link_target
+                IMPORTED_LOCATION_RELEASE ${${module}_LIBRARY_RELEASE}
+                IMPORTED_LOCATION_DEBUG ${${module}_LIBRARY_DEBUG}
+           )
+        set(${module}_required_libs ${module}_LIBRARY_RELEASE ${module}_LIBRARY_DEBUG)
+    else()
+        _cmc_find_library(${module}_LIBRARY CAS_LIBRARY)
+        set(${module}_link_line ${${module}_LIBRARY})
+        set(${module}_link_target IMPORTED_LOCATION ${${module}_LIBRARY})
+        set(${module}_required_libs ${module}_LIBRARY)
+    endif()
 
-#there seems to be a bug : xxx_FOUND is always output in upper case
-if (${module}_FOUND)
-    set(${module}_INCLUDE_DIRS ${${module}_INCLUDE_DIR} PARENT_SCOPE)
-    set(${module}_LIBRARIES ${${module}_LIBRARY} PARENT_SCOPE)
-    # Unlike the 'classic' FindXxx.cmake modules, we are here in a function
-    # it is thus required to forward the values to the parent scope, including the _FOUND.
-    set(${module}_FOUND ${${module}_FOUND} PARENT_SCOPE)
-endif()
 
-mark_as_advanced( ${module}_INCLUDE_DIR ${module}_LIBRARY )
+    ##	
+    ## handle the QUIETLY and REQUIRED arguments and set ${module}_FOUND to TRUE if 
+    ## all listed variables are TRUE
+    ##
+    INCLUDE(FindPackageHandleStandardArgs)
+    FIND_PACKAGE_HANDLE_STANDARD_ARGS(${module} 
+        FOUND_VAR
+            ${module}_FOUND
+        REQUIRED_VARS
+            ${module}_INCLUDE_DIR
+            ${${module}_required_libs}
+    )
 
-##
-## Defines an imported target for the found library
-##
-if (${module}_FOUND AND NOT TARGET ${module}::${module})
-    add_library(${module}::${module} UNKNOWN IMPORTED)
-    set_target_properties(${module}::${module} PROPERTIES
-        # \todo Why are they singular in the documentation ?
-        IMPORTED_LOCATION "${${module}_LIBRARY}"
-        #INTERFACE_COMPILE_OPTIONS "${PC_${module}_CFLAGS_OTHER}"
-        INTERFACE_INCLUDE_DIRECTORIES "${${module}_INCLUDE_DIR}"
-  )
-endif()
+    #there seems to be a bug : xxx_FOUND is always output in upper case
+    if (${module}_FOUND)
+        set(${module}_INCLUDE_DIRS ${${module}_INCLUDE_DIR} PARENT_SCOPE)
+        set(${module}_LIBRARIES ${${module}_link_line} PARENT_SCOPE)
+        # Unlike the 'classic' FindXxx.cmake modules, we are here in a function
+        # it is thus required to forward the values to the parent scope, including the _FOUND.
+        set(${module}_FOUND ${${module}_FOUND} PARENT_SCOPE)
+    endif()
+
+    ##
+    ## Defines an imported target for the found library
+    ##
+    if (${module}_FOUND AND NOT TARGET ${module}::${module})
+        add_library(${module}::${module} UNKNOWN IMPORTED)
+        set_target_properties(${module}::${module} PROPERTIES
+            ${${module}_link_target} # The variable itslef contains the name(s) of the propertie(s)
+            INTERFACE_INCLUDE_DIRECTORIES "${${module}_INCLUDE_DIR}"
+      )
+    endif()
+
+    mark_as_advanced( ${module}_INCLUDE_DIR ${${module}_required_libs} )
 
 endfunction()
+
+
+# Internal usage macro
+macro(_cmc_find_library destination filenames)
+    find_library(${destination} NAMES ${${filenames}}
+        PATHS
+            ${_${module}_PATH}
+            ${_${module}_PATH}/lib
+            ${_${module}_PATH}/bin
+        NO_DEFAULT_PATH
+    )
+
+    ## Note: CMake seems to have a limitation in find_library that is not well documented:
+    ## It will only consider a name as a literal filename if the extension appears in CMAKE_FIND_LIBRARY_SUFFIXES
+    ## see: http://public.kitware.com/pipermail/cmake/2011-March/043369.html
+    ## And on Windows, this variable does not contain .a extension by default.
+    find_file(${destination} NAMES ${${filenames}}
+        PATHS
+            ${_${module}_PATH}
+            ${_${module}_PATH}/lib
+            ${_${module}_PATH}/bin
+        NO_SYSTEM_ENVIRONMENT_PATH
+    )
+
+    find_library(${destination} NAMES ${${filenames}})
+
+    find_file(${destination} NAMES ${${filenames}})
+endmacro()
