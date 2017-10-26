@@ -29,23 +29,23 @@ add_library(${PROJECT_NAME}
 
 
 ## Adds the library headers themselves to the interface include directory
-target_include_directories(${PROJECT_NAME} INTERFACE 
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
-                           $<INSTALL_INTERFACE:include>
-)
-
 ## Adds the parent folder to the header search path used when building *this* library.
-## It allows this library's code to include other headers from this library using <${PROJECT_NAME}/file.h>
-## (instead of relying on potentially backtracing relative paths)
+## It allows this library's as well as client code to include headers from this library using <${PROJECT_NAME}/file.h>
+## (eg. instead of relying on potentially backtracing relative paths inside this library)
 ## Drawback: this is making the other libraries in the lib/ folder visible for inclusion.
-target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>)
+target_include_directories(${PROJECT_NAME} 
+                            PUBLIC
+                                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+                            PRIVATE
+                                $<INSTALL_INTERFACE:include>
+)
 
 # Public includes
 target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # Public includes treated as system (i.e., not generating warnings)
-cmc_target_include_system_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}

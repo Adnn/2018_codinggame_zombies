@@ -266,20 +266,25 @@ endfunction()
 
 
 ##
+## IMPORTANT Starting (at least) with CMake 3.9, the bug with XCode generator is fixed
+## IMPORTANT making this function useless
+##
 ## This function is usefull because CMake is failing to correctly setup system include directories with Xcode
+## The extra unnamed arguments are expected to be the include directories
 ## (at least until CMake 3.3)
 ## see the ticket: https://public.kitware.com/Bug/view.php?id=15687
 ##
-function(cmc_target_include_system_directories target scope include_dirs)
-    if(CMAKE_GENERATOR STREQUAL Xcode)
-        set(_search_path "")
-        foreach(_include_dir ${include_dirs})
-            set(_search_path "${_search_path} -isystem '${_include_dir}'")
-        endforeach()
-        separate_arguments(_search_path UNIX_COMMAND "${_search_path}") #converts to a semicolon based list
-        target_compile_options(${target} ${scope} ${_search_path})
-    else()
-        target_include_directories(${target} SYSTEM ${scope} ${include_dirs})
+
+function(cmc_target_include_system_directories target scope)
+    if (ARGN)
+        if(CMAKE_GENERATOR STREQUAL Xcode)
+            set(_search_path "")
+            foreach(_include_dir ${ARGN})
+                target_compile_options(${target} ${scope} "-isystem${_include_dir}")
+            endforeach()
+        else()
+            target_include_directories(${target} SYSTEM ${scope} ${ARGN})
+        endif()
     endif()
 endfunction()
 
