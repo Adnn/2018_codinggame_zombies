@@ -69,7 +69,9 @@ endmacro()
 ## If the function is invoked, all compilation warnings are treated as errors
 ##
 ## CMAKE_DOCUMENTATION_END
-function(cmc_all_warnings_as_errors target)
+function(cmc_target_all_warnings_as_errors target)
+
+    cmake_policy(SET CMP0057 NEW)
 
     set(gnuoptions "AppleClang" "Clang" "GNU")
     if (CMAKE_CXX_COMPILER_ID IN_LIST gnuoptions)

@@ -46,6 +46,11 @@ target_link_libraries(${PROJECT_NAME}
                       "-framework Cocoa" #Could probably use find_package() to find it as an alternative
 )
 
+
+# TODO : Uncomment to raise warning level and set warning as error
+#cmc_target_all_warnings_as_errors(${PROJECT_NAME})
+
+
 ######################################################################
 ## Installation stuff - common to all projects
 ######################################################################
