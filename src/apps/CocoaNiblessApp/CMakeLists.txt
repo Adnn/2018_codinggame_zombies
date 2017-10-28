@@ -42,8 +42,7 @@ add_executable(${PROJECT_NAME} MACOSX_BUNDLE
 # Alternatively, a specific input template file can be specified with the target's MACOSX_BUNDLE_INFO_PLIST variable,
 # overriding the default template file selection described above.  Such custom file could hardcode all the values.
 
-target_link_libraries(${PROJECT_NAME}
-                      "-framework Cocoa" #Could probably use find_package() to find it as an alternative
+target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 
@@ -52,17 +51,35 @@ target_link_libraries(${PROJECT_NAME}
 
 
 ######################################################################
-## Installation stuff - common to all projects
+## OS X specific
 ######################################################################
-set_target_properties(${PROJECT_NAME} PROPERTIES
-        VERSION "${VERSION}"
-        SOVERSION "${SOVERSION}"
-        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/NiblessInfo.plist.in
+
+# Enable Obj-C ARC
+target_compile_options(${PROJECT_NAME} PRIVATE "-fobjc-arc")
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+                      "-framework Cocoa" #Could probably use find_package() to find it as an alternative
 )
 
-install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}
-        BUNDLE DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}
-        LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY}
-        ARCHIVE DESTINATION ${ARCHIVE_OUTPUT_DIRECTORY}
+
+######################################################################
+## Package Installation 
+######################################################################
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+                      MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/NiblessInfo.plist.in
+                      INSTALL_RPATH_USE_LINK_PATH True # The external libraries with an RPATH-based install name should have their directory appended to INSTALL_RPATH
 )
+
+include(cmc-install)
+
+cmc_target_install_package(${PROJECT_NAME}
+                           NAMESPACE ${PROJECT_NAME}
+                           RESOURCE_DESTINATION "dummy_resource_copy" # There is a warning emitted by CMake if this is not set.
+                                  # (Which seems useless under OS X, see: http://stackoverflow.com/q/31723271/1027706)
+                           #VERSION "__"
+                           #SOVERSION "__"
+)
+
+cmc_fixup_osx_bundle(${PROJECT_NAME})
+

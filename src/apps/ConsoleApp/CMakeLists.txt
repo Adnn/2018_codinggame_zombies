@@ -24,7 +24,7 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 
@@ -33,17 +33,14 @@ target_link_libraries(${PROJECT_NAME}
 
 
 ######################################################################
-## Installation stuff - common to all projects
+## Package Installation 
 ######################################################################
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-                      VERSION "${VERSION}"
-                      SOVERSION "${SOVERSION}"
+include(cmc-install)
+
+cmc_target_install_package(${PROJECT_NAME}
+                           NAMESPACE ${PROJECT_NAME}
+                           #VERSION "__"
+                           #SOVERSION "__"
 )
 
-# Install the executable
-install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}
-        LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY}
-        ARCHIVE DESTINATION ${ARCHIVE_OUTPUT_DIRECTORY}
-)

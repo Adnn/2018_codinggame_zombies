@@ -1,11 +1,14 @@
 ## CMAKE_DOCUMENTATION_START cmc_install_package
 ##
 ## A macro to take care of the complete "cmake packaging" and installation of target (relying on an export-set).
+## Package are only created for library targets, for executable a simple binary installation is taking place.
 ## The package is created in the namespace given to NAMESPACE argument.
 ## For library targets, an alias target NAMESPACE::target is also created
 ## in order to make prefixed usage available from the build tree.
 ##
 ## Installs the headers given to PUBLIC_HEADER, creating the same folder structure prefixed by 'include/${target}/'.
+##
+## RESOURCE_DESTINATION: If a value is provided, it is forwarded as install(target RESOURCE DESTINATION ...) parameter.
 ##
 ## GENERATE_EXPORT_HEADER: If the option is given, generate export headers (e.g. the declspec dance under Windows).
 ## 
@@ -17,7 +20,7 @@
 function(cmc_target_install_package target)
 
     set(optionsArgs GENERATE_EXPORT_HEADER)
-    set(oneValueArgs NAMESPACE VERSION SOVERSION COMPATIBLITY)
+    set(oneValueArgs NAMESPACE VERSION SOVERSION COMPATIBLITY RESOURCE_DESTINATION)
     set(multiValueArgs PUBLIC_HEADER)
     cmake_parse_arguments(CAS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
@@ -27,25 +30,38 @@ function(cmc_target_install_package target)
                           SOVERSION "${CAS_SOVERSION}"
     )
 
-    # If the target is a library type (see: https://cmake.org/cmake/help/v3.10/prop_tgt/TYPE.html) 
-    # Creates an alias for it prefixed with the namespace (so other targets in the same build tree can use it prefixed).
+    # Determines the target type
     get_target_property(target_type ${target} TYPE)
     set(library_type_list STATIC_LIBRARY MODULE_LIBRARY SHARED_LIBRARY INTERFACE_LIBRARY)
+
+    # If the target is a library type (see: https://cmake.org/cmake/help/v3.10/prop_tgt/TYPE.html) 
+    # Creates an alias for it prefixed with the namespace (so other targets in the same build tree can use it prefixed).
     if (target_type IN_LIST library_type_list)
         add_library(${namespace}::${target} ALIAS ${target})
+    endif()
+
+    if(CAS_RESOURCE_DESTINATION)
+        set(resource_destination_install RESOURCE DESTINATION "${CAS_RESOURCE_DESTINATION}")
     endif()
 
     # Install binaries and generate the export set for the target
     set (exportSet ${target}Targets)
     install(TARGETS ${target} EXPORT ${exportSet}
-            RUNTIME DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}
+            BUNDLE DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}  # Executables created as MACOSX_BUNDLE on OS X
+            RUNTIME DESTINATION ${RUNTIME_OUTPUT_DIRECTORY} # Executables in other situations
             LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY}
             ARCHIVE DESTINATION ${ARCHIVE_OUTPUT_DIRECTORY}
+            ${resource_destination_install}
     )
 
     # Install headers
     set(include_prefix include/${target})
     cmc_install_header_preserve_structure(${include_prefix} "${CAS_PUBLIC_HEADER}")
+
+    # For an executable, there is no need ot install it as a package
+    if (target_type EQUAL "EXECUTABLE")
+        return()
+    endif()
 
     # Generate and install the export header (e.g. __declspec( dllexport )) and install it
     if (CAS_GENERATE_EXPORT_HEADER)
@@ -181,3 +197,22 @@ function(cmc_install_header_preserve_structure prefix HEADER_LIST)
 
 endfunction()
 
+
+## CMAKE_DOCUMENTATION_START cmc_fixup_osx_bundle
+##
+## Fixup the INSTALLED bundle:
+## copies dynamic libraries next to the executable, fixes the install names.
+##
+## CMAKE_DOCUMENTATION_END
+function(cmc_fixup_osx_bundle target)
+
+    set (_app ${CMAKE_INSTALL_PREFIX}/${RUNTIME_OUTPUT_DIRECTORY}/${target}.app)
+    ## Nota: BU_CHMOD_BUNDLE_ITEMS allows fixup_bundle to issue a chmod command if a copied library is not writtable
+    ## It is usefull in case a library is copied from a system folder. (https://public.kitware.com/Bug/view.php?id=13833)
+    install(CODE "set(BU_CHMOD_BUNDLE_ITEMS ON)
+                  include(BundleUtilities)
+                  fixup_bundle(\"${_app}\" \"\" \"\")"
+            COMPONENT Runtime
+    )
+
+endfunction()
