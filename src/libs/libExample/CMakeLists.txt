@@ -57,36 +57,22 @@ target_link_libraries(${PROJECT_NAME}
 
 
 ######################################################################
-## Installation stuff - common to all projects
+## Package Installation 
 ######################################################################
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-                      VERSION "${VERSION}"
-                      SOVERSION "${SOVERSION}"
+include(cmc-install)
+
+# TODO: Allow the generated Config file to autonomously find the dependencies of the target,
+# giving -for each dependency- a string equivalent to the arguments that would be given to find_package.
+#cmc_target_depends(${PROJECT_NAME} "Boost COMPONENT filesystem")
+#cmc_target_depends(${PROJECT_NAME} "OtherLib")
+
+cmc_target_install_package(${PROJECT_NAME}
+                           NAMESPACE ${PROJECT_NAME}
+                           PUBLIC_HEADER ${${PROJECT_NAME}_HEADERS}
+                           GENERATE_EXPORT_HEADER
+                           #VERSION "__"
+                           #SOVERSION "__"
+                           #COMPATIBILITY SameMajorVersion
 )
 
-# Generate the export set for the target
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
-        RUNTIME DESTINATION ${RUNTIME_OUTPUT_DIRECTORY}
-        LIBRARY DESTINATION ${LIBRARY_OUTPUT_DIRECTORY}
-        ARCHIVE DESTINATION ${ARCHIVE_OUTPUT_DIRECTORY}
-)
-
-# Install the headers
-    ## Note: Does install all files, but does *not* recreate the folder structure
-install(FILES ${${PROJECT_NAME}_HEADERS}
-        DESTINATION include/${PROJECT_NAME})
-    
-    ## Alternatively: Install a subdir content
-#install(DIRECTORY ${_subdir}/ DESTINATION include/${PROJECT_NAME}/${_subdir}
-#        FILES_MATCHING PATTERN "*.h")
-
-
-# TODO: When including internal dependencies using 'cmc_find_internal_package()', those internal dependencies
-# linked against by this target should be listed in 'cmc_config_dependency_code()'.
-# List dependencies to be found by the config file, and export the target.
-#cmc_config_dependency_code(TARGET_DEPENDENCIES DEPENDS __ __)
-
-include(cmc-export)
-# TODO: set namespace
-cmc_export(${PROJECT_NAME} NAMESPACE __::)

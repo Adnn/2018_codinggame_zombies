@@ -4,7 +4,7 @@
 
 ## CMAKE_DOCUMENTATION_START cmc-macros.cmake
 ##
-## Contain whole macros/functions users can use in CMakeLists.txt for handle theire tree project.
+## Contain whole macros/functions users can use in CMakeLists.txt for handle their project tree.
 ##
 ##  \\li see \\ref conditional_add_subdirectory.
 ##  \\li see \\ref list_subdirectories
@@ -12,18 +12,17 @@
 ##
 ## CMAKE_DOCUMENTATION_END
 
+# Multiple inclusions guard
 if(_SYSTEM_FILES_TOOLS_CMAKE_INCLUDED_)
   return()
 endif()
 set(_SYSTEM_FILES_TOOLS_CMAKE_INCLUDED_ true)
 
-cmake_minimum_required(VERSION 2.8)
-
 include(${CMAKE_ROOT}/Modules/CMakeParseArguments.cmake)
 
 ## CMAKE_DOCUMENTATION_START define_option_variables
 ##
-## Initialize custom variables, grouped under 'OPTION', to control CMake run.
+## Initialize custom variables, grouped under 'OPTION', to control different aspect of the CMake run.
 ##
 ## CMAKE_DOCUMENTATION_END
 function(cmc_define_option_variables)
@@ -153,29 +152,7 @@ macro(internal_cmc_xcode_product_archive_fix)
 endmacro()
 
 
-## CMAKE_DOCUMENTATION_START cmc_config_dependency_code
-##
-## Generate the CMake script code to find the given imported target dependencies
-## This code is ready to be added to a CMake package config file.
-## see: http://www.cmake.org/cmake/help/v3.3/manual/cmake-packages.7.html#creating-a-package-configuration-file
-##
-## CMAKE_DOCUMENTATION_END
-function(cmc_config_dependency_code output)
-    set(optionsArgs "")
-    set(oneValueArgs "")
-    set(multiValueArgs "DEPENDS")
-    cmake_parse_arguments(CAS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-
-    set(_buffer "include(CMakeFindDependencyMacro)")
-    foreach(dependency ${CAS_DEPENDS})
-        string(CONCAT _buffer ${_buffer} "\n" "find_dependency(" ${dependency} ")")
-    endforeach()
-
-    set(${output} ${_buffer} PARENT_SCOPE)
-endfunction()
-
-
-function(cmc_config_buildtree_checks_code output)
+function(cmc_internal_config_buildtree_checks_code output)
     set(_check_buffer "#invokes cmc_check_import_DIR on each target imported from its build tree by the project that wrote this config.")
     foreach(dependency ${_CMC_BUILDTREE_TARGET_LIST})
         string(CONCAT _check_buffer ${_check_buffer} "\n" "    " "cmc_check_import_DIR(" ${dependency} " \"" ${${dependency}_DIR} "\")" )
@@ -189,11 +166,6 @@ function(cmc_check_import_DIR target dir_expected)
     if(NOT "${${target}_DIR}" STREQUAL "${dir_expected}")
         message(SEND_ERROR "${target} importation directory does not match up with expectations: ${dir_expected}")
     endif()
-endfunction()
-
-
-function (cmc_targetfile_name projectname filename)
-    set(${filename} ${projectname}Targets.cmake PARENT_SCOPE)
 endfunction()
 
 

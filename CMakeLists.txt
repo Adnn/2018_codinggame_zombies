@@ -2,8 +2,8 @@
 ## Root CMakeLists.txt
 ## #################################################################
 
-# Not tested with previous versions
-cmake_minimum_required(VERSION 3.0)
+# >= 2.8.12 to be able to use the target variant of commands. >= 3.3 to have access to IN_LIST operator.
+cmake_minimum_required(VERSION 3.3)
 
 # TODO : set project name
 project(__)
