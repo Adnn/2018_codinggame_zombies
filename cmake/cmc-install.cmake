@@ -37,7 +37,7 @@ function(cmc_target_install_package target)
     # If the target is a library type (see: https://cmake.org/cmake/help/v3.10/prop_tgt/TYPE.html) 
     # Creates an alias for it prefixed with the namespace (so other targets in the same build tree can use it prefixed).
     if (target_type IN_LIST library_type_list)
-        add_library(${namespace}::${target} ALIAS ${target})
+        add_library(${CAS_NAMESPACE}::${target} ALIAS ${target})
     endif()
 
     if(CAS_RESOURCE_DESTINATION)
