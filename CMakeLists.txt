@@ -2,8 +2,12 @@
 ## Root CMakeLists.txt
 ## #################################################################
 
-# >= 2.8.12 to be able to use the target variant of commands. >= 3.3 to have access to IN_LIST operator.
-cmake_minimum_required(VERSION 3.3)
+# >= 2.8.12 to be able to use the target variant of commands
+# >= 3.3 to have access to IN_LIST operator
+# 3.9 fixes a bad bug with CMAKE_AUTORCC:
+#   it only regenerated resource
+#   if the resources.qrc was touched, not when the pointed files were touched.
+cmake_minimum_required(VERSION 3.9)
 
 # TODO : set project name
 project(__)
@@ -21,6 +25,10 @@ include (cmc-macros)
 
 # Definition of custom variables
 cmc_define_option_variables()
+
+# Handle Conan, if it was used to install dependencies 
+include(cmc-conan)
+cmc_optional_conan_setup()
 
 
 ## #################################################################
@@ -53,8 +61,11 @@ option(BUILD_SHARED_LIBS "Build shared libraries" false)
 # 
 # C++ version control
 # 
-include(cmc-cpp) # for cmc_select_cpp_version
-cmc_select_cpp_version()
+# General CPP options
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+#include(cmc-cpp)
+#cmc_enable_objc_arc()
 
 
 ## #################################################################

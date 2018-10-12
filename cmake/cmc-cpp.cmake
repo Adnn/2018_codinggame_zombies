@@ -18,7 +18,8 @@ endmacro()
 
 ## CMAKE_DOCUMENTATION_START cmc_enable_cpp_version
 ##
-## Initialize custom variables, grouped under 'OPTION', to control CMake run.
+## Tweak CMake variables and Xcode attribute according to the given language level
+## Deprecated in favor of setting CMAKE_CXX_xxx variables in the root CMakeLists.txt
 ##
 ## CMAKE_DOCUMENTATION_END
 macro(cmc_enable_cpp_version)
@@ -56,11 +57,19 @@ macro(cmc_enable_cpp_version)
 
     # General CPP options
     set(CMAKE_CXX_EXTENSIONS OFF)
+endmacro()
 
+
+## CMAKE_DOCUMENTATION_START cmc_enable_objc_arc
+##
+## Enables OBJ-C ARC at the global level, OSX only
+## Currently only acting on Xcode, but could be extended to Command Line Tools
+##
+## CMAKE_DOCUMENTATION_END
+macro(cmc_enable_objc_arc)
     if (CMAKE_GENERATOR STREQUAL "Xcode")
         SET(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
     endif()
-
 endmacro()
 
 
