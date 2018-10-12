@@ -4,7 +4,7 @@
 
 ## CMAKE_DOCUMENTATION_START cmc-macros.cmake
 ##
-## Contain whole macros/functions users can use in CMakeLists.txt for handle their project tree.
+## Contain whole macros/functions users can use in CMakeLists.txt to handle their project tree
 ##
 ##  \\li see \\ref conditional_add_subdirectory.
 ##  \\li see \\ref list_subdirectories
@@ -106,19 +106,21 @@ endfunction()
 ## CMAKE_DOCUMENTATION_END
 function(cmc_setup_output)
     # Used to initialize DEBUG_POSTFIX property of further created targets.
-    set(CMAKE_DEBUG_POSTFIX "d")
+    set(CMAKE_DEBUG_POSTFIX "d" PARENT_SCOPE)
 
-    # Potentially adds a suffix to the library installation directory, by detecting the compiler size for void*
-    # Nota: copied from osg's root CMakeLists.txt
-    IF(UNIX AND NOT WIN32 AND NOT APPLE)
-      IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
-          SET(LIB_POSTFIX "64" CACHE STRING "suffix for 32/64 dir placement")
-          MARK_AS_ADVANCED(LIB_POSTFIX)
-      ENDIF()
-    ENDIF()
-    IF(NOT DEFINED LIB_POSTFIX)
-        SET(LIB_POSTFIX "")
-    ENDIF()
+    # Note: This suffix may have come out of fashion, it seems Ubuntu does not have lib64 folders
+    #       Disable (until a potential drawback surfaces), making Conan recipes more uniform
+    ## Potentially adds a suffix to the library installation directory, by detecting the compiler size for void*
+    ## Nota: copied from osg's root CMakeLists.txt
+    #IF(UNIX AND NOT WIN32 AND NOT APPLE)
+    #  IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
+    #      SET(LIB_POSTFIX "64" CACHE STRING "suffix for 32/64 dir placement")
+    #      MARK_AS_ADVANCED(LIB_POSTFIX)
+    #  ENDIF()
+    #ENDIF()
+    #IF(NOT DEFINED LIB_POSTFIX)
+    #    SET(LIB_POSTFIX "")
+    #ENDIF()
 
     # On Windows platforms, .dll files are RUNTIME targets and the corresponding import library are ARCHIVE.
     # Static libraries are always treated as archive: its is not common to build a LIBRARY on Windows.
@@ -279,7 +281,7 @@ endfunction()
 function(CONDITIONAL_ADD_SUBDIRECTORY subdirectory)
     set(optionsArgs "VERBOSE;SILENT")
     set(oneValueArgs "")
-    set(multiValueArgs "DEPENDS;OPTIONS")
+    set(multiValueArgs "PROGRAMS;DEPENDS;OPTIONS")
     cmake_parse_arguments(CAS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
     # Determine if this invocation is verbose
@@ -301,11 +303,11 @@ function(CONDITIONAL_ADD_SUBDIRECTORY subdirectory)
 		endif()
 	endforeach()
 	if(missingOpt_list AND verbose)
-	    message(STATUS "subdirectory '${subdirectory}' will NOT be built because of missing options : ${missingOpt_list}")
+	    message(STATUS "subdirectory '${subdirectory}' will NOT be built because of missing options: ${missingOpt_list}")
 	endif()
 
-    # Check for dependencies
-    if( NOT missingOpt_list) # Only go through the dependencies if all required options are ON
+    if( NOT missingOpt_list) # Only go through the dependencies and required programs if all required options are ON
+        # Check for dependencies
         set(missingDep_list "") # empty list where missing dependencies will be appended
         foreach(depend ${CAS_DEPENDS})
             string(TOUPPER ${depend} upper_name)
@@ -316,12 +318,23 @@ function(CONDITIONAL_ADD_SUBDIRECTORY subdirectory)
             endif()
         endforeach()
         if(missingDep_list AND verbose)
-            message ("subdirectory '${subdirectory}' will NOT be built because of missing dependencies : ${missingDep_list}")
+            message ("subdirectory '${subdirectory}' will NOT be built because of missing dependencies: ${missingDep_list}")
+        endif()
+
+        # Check for programs
+        set(missingPrg_list "") # empty list where missing programs will be appended
+        foreach(program ${CAS_PROGRAMS})
+            if(NOT ${program})
+                list(APPEND missingPrg_list ${program})
+            endif()
+        endforeach()
+        if(missingPrg_list AND verbose)
+            message ("subdirectory '${subdirectory}' will NOT be built because of missing programs: ${missingPrg_list}")
         endif()
     endif()
 
-	# add subdir if all conditins are satisfied
-	if(NOT missingDep_list AND NOT missingOpt_list)
+	# add subdir if all conditions are satisfied
+    if(NOT missingPrg_list AND NOT missingDep_list AND NOT missingOpt_list)
 	    if(verbose)
 		    message (STATUS "add_subdirectory(${subdirectory})")
 		endif()

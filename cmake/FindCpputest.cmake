@@ -32,5 +32,7 @@ help_find(Cpputest HEADER CppUTest/TestHarness.h LIBRARY CppUTest)
 
  ## Winmm library should be added on Windows
 if(Cpputest_FOUND AND WIN32)
-    set(Cpputest_LIBRARIES ${Cpputest_LIBRARIES} Winmm.lib)     
+    set(Cpputest_LIBRARIES ${Cpputest_LIBRARIES} winmm)
+    set_target_properties(Cpputest::Cpputest PROPERTIES
+                          INTERFACE_LINK_LIBRARIES winmm)
 endif()

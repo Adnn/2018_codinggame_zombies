@@ -43,17 +43,23 @@ function(HELP_FIND module)
     if(NOT CAS_LIBRARY)
         _cmc_find_library(${module}_LIBRARY_RELEASE CAS_LIBRARY_RELEASE)
         _cmc_find_library(${module}_LIBRARY_DEBUG CAS_LIBRARY_DEBUG)
-        set(${module}_link_line "optimized ${${module}_LIBRARY_RELEASE} debug ${${module}_LIBRARY_DEBUG}")
-        set(${module}_link_target
-                IMPORTED_LOCATION_RELEASE ${${module}_LIBRARY_RELEASE}
-                IMPORTED_LOCATION_DEBUG ${${module}_LIBRARY_DEBUG}
-           )
-        set(${module}_required_libs ${module}_LIBRARY_RELEASE ${module}_LIBRARY_DEBUG)
+        if(${module}_LIBRARY_RELEASE AND ${module}_LIBRARY_DEBUG)
+            set(${module}_link_line "optimized ${${module}_LIBRARY_RELEASE} debug ${${module}_LIBRARY_DEBUG}")
+            set(${module}_link_target
+                    IMPORTED_LOCATION_RELEASE ${${module}_LIBRARY_RELEASE}
+                    IMPORTED_LOCATION_DEBUG ${${module}_LIBRARY_DEBUG}
+               )
+            set(${module}_required_libs ${module}_LIBRARY_RELEASE ${module}_LIBRARY_DEBUG)
+        elseif(${module}_LIBRARY_RELEASE)
+            message(WARNING "${module} debug library not found, will only use the release build.")
+            _cmc_define_single_library_variable(${module}_LIBRARY_RELEASE)
+        elseif(${module}_LIBRARY_DEBUG)
+            message(WARNING "${module} release library not found, will only use the debug build.")
+            _cmc_define_single_library_variable(${module}_LIBRARY_DEBUG)
+        endif()
     else()
         _cmc_find_library(${module}_LIBRARY CAS_LIBRARY)
-        set(${module}_link_line ${${module}_LIBRARY})
-        set(${module}_link_target IMPORTED_LOCATION ${${module}_LIBRARY})
-        set(${module}_required_libs ${module}_LIBRARY)
+        _cmc_define_single_library_variable(${module}_LIBRARY)
     endif()
 
 
@@ -85,7 +91,7 @@ function(HELP_FIND module)
     if (${module}_FOUND AND NOT TARGET ${module}::${module})
         add_library(${module}::${module} UNKNOWN IMPORTED)
         set_target_properties(${module}::${module} PROPERTIES
-            ${${module}_link_target} # The variable itslef contains the name(s) of the propertie(s)
+            ${${module}_link_target} # The variable itself contains the name(s) of the propertie(s)
             INTERFACE_INCLUDE_DIRECTORIES "${${module}_INCLUDE_DIR}"
       )
     endif()
@@ -105,19 +111,30 @@ macro(_cmc_find_library destination filenames)
         NO_DEFAULT_PATH
     )
 
+    # Note: commented out for the moment, because
+    # a) it _should_ not be usefull, well behaved builds should build libraries with the correct platform suffix
+    # b) it caused a mess when evaluating Conan, eg. finding the include/curl directory before the actual library 
     ## Note: CMake seems to have a limitation in find_library that is not well documented:
     ## It will only consider a name as a literal filename if the extension appears in CMAKE_FIND_LIBRARY_SUFFIXES
     ## see: http://public.kitware.com/pipermail/cmake/2011-March/043369.html
     ## And on Windows, this variable does not contain .a extension by default.
-    find_file(${destination} NAMES ${${filenames}}
-        PATHS
-            ${_${module}_PATH}
-            ${_${module}_PATH}/lib
-            ${_${module}_PATH}/bin
-        NO_SYSTEM_ENVIRONMENT_PATH
-    )
+    #find_file(${destination} NAMES ${${filenames}}
+    #    PATHS
+    #        ${_${module}_PATH}
+    #        ${_${module}_PATH}/lib
+    #        ${_${module}_PATH}/bin
+    #    NO_SYSTEM_ENVIRONMENT_PATH
+    #)
 
     find_library(${destination} NAMES ${${filenames}})
 
-    find_file(${destination} NAMES ${${filenames}})
+    #find_file(${destination} NAMES ${${filenames}})
+endmacro()
+
+
+# Internal usage macro
+macro(_cmc_define_single_library_variable library)
+    set(${module}_link_line ${${library}})
+    set(${module}_link_target IMPORTED_LOCATION ${${library}})
+    set(${module}_required_libs ${library})
 endmacro()
