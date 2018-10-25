@@ -3,6 +3,6 @@
 ## #################################################################
 
 # TODO : add the subdirectories to compile
-#add_subdirectory(__)
+#add_subdirectory()
 # OR from cmc-macros
-#conditional_add_subdirectory(xxx DEPENDS yyy zzz OPTIONS BUILD_xxx)
+conditional_add_subdirectory(zombies DEPENDS Boost CURL::libcurl)

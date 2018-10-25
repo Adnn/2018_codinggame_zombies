@@ -10,7 +10,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 # TODO : set project name
-project(__)
+project(cgprepa)
 
 
 ## #################################################################
@@ -64,7 +64,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" false)
 # General CPP options
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
-#include(cmc-cpp)
+include(cmc-cpp)
 #cmc_enable_objc_arc()
 
 
@@ -85,8 +85,12 @@ include(cmc-import)
 # 3rd party dependencies
 #
 
-#find_package(__)
+find_package(Boost 1.68 
+    COMPONENTS
+        filesystem
+)
 
+find_package(curl CONFIG REQUIRED) 
 
 ## #################################################################
 ## Add targets
